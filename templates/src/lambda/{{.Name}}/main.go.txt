@@ -1,0 +1,76 @@
+{{$fn := .}}
+package main
+
+import (
+  "github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws/session"
+  {{ if hasDependency $fn.Dependencies "eventBridge" }}
+  "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+  {{ end }}
+  {{ if hasDependency $fn.Dependencies "dynamo" }}
+	"github.com/guregu/dynamo"
+  {{ end }}
+	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog/log"
+  "{{ $fn.Module.Module.Mod }}/lambda/{{ $fn.Name }}/handler"
+)
+
+// Environment defines the environment variables required to run.
+type Environment struct {
+  {{ if hasDependency $fn.Dependencies "dynamo" }}
+	TableName string `required:"true"`
+  {{ end }}
+  {{ if hasDependency $fn.Dependencies "eventBridge" }}
+	BusName   string `required:"true"`
+  {{ end }}
+}
+
+
+// {{ .Description }}
+func main() {
+
+	//////////////////////////
+	// Setup Environment
+	//////////////////////////
+	var cfg Environment
+	err := envconfig.Process("", &cfg)
+	if err != nil {
+		panic(err)
+	}
+
+  {{ if gt (len $fn.Dependencies) 0 }}
+	//////////////////////////
+	// Setup AWS
+	//////////////////////////
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+  {{ end }}
+  {{ if hasDependency $fn.Dependencies "dynamo" }}
+	db := dynamo.New(sess)
+	table := db.Table(cfg.TableName)
+  {{ end }}
+
+  {{ if hasDependency $fn.Dependencies "eventBridge" }}
+	eventBridge := cloudwatchevents.New(sess)
+  {{ end }}
+
+  log := log.With().Str("fn", "{{ $fn.Name }}").Logger()
+
+	// Build Handler
+	h := &handler.Handler{
+    {{ if hasDependency $fn.Dependencies "eventBridge" }}
+		BusName: cfg.BusName,
+		Bridge:  eventBridge,
+    {{ end }}
+    {{ if hasDependency $fn.Dependencies "dynamo" }}
+		Table:   table,
+    {{ end }}
+    Log:     log,
+	}
+
+  log.Debug().Msg("lambda instance setup complete")
+
+	// Run Lambda instance.
+	lambda.Start(h.HandleInvocation)
+}

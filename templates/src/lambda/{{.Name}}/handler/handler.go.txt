@@ -1,0 +1,43 @@
+{{$fn := .}}
+package handler
+
+import (
+  "context"
+  "fmt"
+
+  {{ if hasDependency $fn.Dependencies "eventBridge" }}
+  "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+  {{ end }}
+  {{ if hasDependency $fn.Dependencies "dynamo" }}
+	"github.com/guregu/dynamo"
+  {{ end }}
+  "github.com/rs/zerolog"
+)
+
+{{ if hasDependency $fn.Dependencies "eventBridge" }}
+// Publisher can publish events
+type Publisher interface {
+	PutEvents(*cloudwatchevents.PutEventsInput) (*cloudwatchevents.PutEventsOutput, error)
+}
+{{ end }}
+
+// Handler provides dependencies for the {{ .Name }} function.
+type Handler struct {
+  Log zerolog.Logger
+  {{ if hasDependency $fn.Dependencies "dynamo" }}
+  Table dynamo.Table
+  {{ end }}
+  {{ if hasDependency $fn.Dependencies "eventBridge" }}
+  Bridge  Publisher
+	BusName string
+  {{ end }}
+}
+
+
+// HandleInvocation {{ .Description }}
+func (h *Handler) HandleInvocation(ctx context.Context) error {
+
+	h.Log.Debug().Msg("invoked")
+
+	return fmt.Errorf("not implemented")
+}

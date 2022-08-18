@@ -1,0 +1,88 @@
+{{$fn := .}}
+const pulumi = require("@pulumi/pulumi");
+const aws = require("@pulumi/aws");
+const stackName = pulumi.getStack();
+
+exports.build = function(table, eventBus) {
+  const role = new aws.iam.Role(`${stackName}_{{ $fn.Name }}_lambda_role`, {
+      assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({ Service: "lambda.amazonaws.com" }),
+  });
+
+  const policy = new aws.iam.RolePolicy(`${stackName}_{{ $fn.Name }}_policy`, {
+      role,
+      policy: pulumi.output({
+          Version: "2012-10-17",
+          Statement: [
+          {{ range $i, $dep := .Dependencies }}
+          {{ awsPolicies $dep }}
+          {{ end }}
+          {
+              Action: ["logs:*", "cloudwatch:*"],
+              Resource: "*",
+              Effect: "Allow",
+          }],
+      }),
+  });
+
+  const fn = new aws.lambda.Function(`${stackName}_{{ $fn.Name }}`, {
+    code: new pulumi.asset.AssetArchive({
+      "code": new pulumi.asset.FileAsset("../bin/{{ $fn.Name }}"),
+    }),
+    role: role.arn,
+    handler: "code",
+    runtime: "go1.x",
+    description: "{{ .Description }}",
+    environment: {
+      variables: {
+        TABLENAME: table.name,
+        BUSNAME: eventBus.name,
+      },
+    },
+  }, { dependsOn: [policy] });
+
+  {{range $i, $trigger := .Triggers}}
+  {{if eq $trigger.Type "event"}}
+  const eventRule{{ $i }} = new aws.cloudwatch.EventRule(`${stackName}_{{ $fn.Name }}_{{ $i }}`, {
+    name: "{{ $trigger.Name }}_{{ $fn.Name }}",
+    eventPattern: `{{ $trigger.Expression }}`,
+    eventBusName: eventBus.name,
+  })
+
+  // Give EventBridge permission to invoke the function.
+  new aws.lambda.Permission(`${stackName}_{{ $fn.Name }}_{{ $i }}_lambda_permission`, {
+      action: "lambda:InvokeFunction",
+      principal: "events.amazonaws.com",
+      function: fn.arn,
+      sourceArn: eventRule.arn,
+  });
+
+  new aws.cloudwatch.EventTarget(`${stackName}_{{ $fn.Name }}_{{ $i }}_call_lambda`, {
+    arn: fn.arn,
+    eventBusName: eventBus.name,   
+    rule: eventRule.name,
+  });
+  {{else if eq $trigger.Type "schedule" }}
+  const eventRule = new aws.cloudwatch.EventRule(`${stackName}_{{ $fn.Name }}_{{ $i }}`, {
+    description: "{{ $trigger.Name }}",
+    scheduleExpression: '{{ $trigger.Expression }}',
+  });
+
+  // Give EventBridge permission to invoke the function.
+  new aws.lambda.Permission(`${stackName}_{{ $fn.Name }}_{{ $i }}_lambda_permission`, {
+      action: "lambda:InvokeFunction",
+      principal: "events.amazonaws.com",
+      function: fn.arn,
+      sourceArn: eventRule.arn,
+  });
+
+  new aws.cloudwatch.EventTarget(`${stackName}_{{ $fn.Name }}_{{ $i }}_call_lambda`, {
+    arn: fn.arn,
+    rule: eventRule.name,
+  });
+
+  {{end}}
+  {{end}}
+
+
+  return fn
+}

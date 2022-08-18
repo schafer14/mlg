@@ -1,0 +1,49 @@
+{
+  /* This file represents an intention to build a Lambda function. Filling out */
+  /* details from this file will generate for the Lambda. */
+
+  /* The contents of this file are json5 (you can write comments). */
+
+  /* name of the lambda function to be created. */
+  name: "",
+
+  /* description of the Lamdba function */
+  description: "",
+
+  // dependencies for the function will generate the handler function for your Lambda.
+  dependencies: [
+    /* { */
+    /*   "type": "dynamo", */
+    /*   "policies": [ */
+    /*     "GetItem", */      
+    /*     "Query", */
+    /*     "DeleteItem", */
+    /*     "PutItem", */
+    /*   ] */
+    /* }, */
+
+    /* { */
+    /*   "type": "eventBridge", */
+    /*   "policies": [ */
+    /*     "PutEvents", */
+    /*   ] */
+    /* } */
+  ],
+  
+  /* triggers are how the Lambda gets triggered. */
+  triggers: [
+    
+    /* { */
+    /*   type: "schedule", */
+    /*   name: "handle tick", */
+    /*   expression: "rate(30 minutes)", */
+    /* }, */
+
+    /* { */
+    /*   type: "event", */
+    /*   name: "onX", */
+    /*   expression: '{ "detail-type": [ "consent.created" ], "source": [ "banking.v2" ] }', */
+    /* }, */
+  ],
+}
+
