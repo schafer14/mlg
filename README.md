@@ -5,3 +5,9 @@ Install:
 ```
 go install github.com/schafer14/mlg
 ```
+
+Usage: 
+
+```
+mlg
+```
