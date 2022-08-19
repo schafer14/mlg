@@ -77,7 +77,7 @@ exports.build = function(table, eventBus) {
 
   new aws.cloudwatch.EventTarget(`${stackName}_{{ $fn.Name }}_{{ $i }}_call_lambda`, {
     arn: fn.arn,
-    rule: eventRule.name,
+    rule: eventRule{{ $i }}.name,
   });
 
   {{end}}
