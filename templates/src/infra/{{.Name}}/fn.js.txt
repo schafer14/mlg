@@ -53,13 +53,13 @@ exports.build = function(table, eventBus) {
       action: "lambda:InvokeFunction",
       principal: "events.amazonaws.com",
       function: fn.arn,
-      sourceArn: eventRule.arn,
+      sourceArn: eventRule{{ $i }}.arn,
   });
 
   new aws.cloudwatch.EventTarget(`${stackName}_{{ $fn.Name }}_{{ $i }}_call_lambda`, {
     arn: fn.arn,
     eventBusName: eventBus.name,   
-    rule: eventRule.name,
+    rule: eventRule{{ $i }}.name,
   });
   {{else if eq $trigger.Type "schedule" }}
   const eventRule = new aws.cloudwatch.EventRule(`${stackName}_{{ $fn.Name }}_{{ $i }}`, {
