@@ -30,18 +30,18 @@ func TestHandleInvocation(t *testing.T) {
 // ========
 // FIXTURES
 // ========
-func buildHandler(t *testing.T) (Handler, *tests.Recorder) {
+func buildHandler(t *testing.T) (handler.Handler, *tests.Recorder) {
 
   log := log.New()
 	table, tearDown := tests.CreateDatabase(t)
 	t.Cleanup(tearDown)
 	publisher := &tests.Recorder{}
 
-	return Handler{
-    log: log,
-		table:   table,
-		bridge:  publisher,
-		busName: "the bus",
+	return handler.Handler{
+    Log: log,
+		Table:   table,
+		Bridge:  publisher,
+		BusName: "the bus",
 	}, publisher
 }
 
