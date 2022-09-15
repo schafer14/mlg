@@ -5,6 +5,7 @@
   /* The contents of this file are json5 (you can write comments). */
 
   /* name of the lambda function to be created. */
+  /* User snake_case for the best result */
   name: "",
 
   /* description of the Lamdba function */
@@ -35,13 +36,13 @@
     
     /* { */
     /*   type: "schedule", */
-    /*   name: "handle tick", */
+    /*   name: "every_30_minutes", */
     /*   expression: "rate(30 minutes)", */
     /* }, */
 
     /* { */
     /*   type: "event", */
-    /*   name: "onX", */
+    /*   name: "on_consent_created", */
     /*   expression: '{ "detail-type": [ "consent.created" ], "source": [ "banking.v2" ] }', */
     /* }, */
   ],

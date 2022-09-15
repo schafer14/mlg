@@ -16,7 +16,7 @@ func TestHandleInvocation(t *testing.T) {
   // Arrange
   is := is.New(t)
   ctx := context.Background()
-  h := buildHandler(t)
+  h, _ := buildHandler(t)
 
   // Act
   err := h.HandleInvocation(ctx)
@@ -32,16 +32,20 @@ func TestHandleInvocation(t *testing.T) {
 // ========
 func buildHandler(t *testing.T) (handler.Handler, *tests.Recorder) {
 
-  log := log.New()
+  log := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	table, tearDown := tests.CreateDatabase(t)
 	t.Cleanup(tearDown)
 	publisher := &tests.Recorder{}
 
 	return handler.Handler{
     Log: log,
+    {{ if hasDependency $fn.Dependencies "dynamo" }}
 		Table:   table,
+    {{ end }}
+    {{ if hasDependency $fn.Dependencies "eventBridge" }}
 		Bridge:  publisher,
 		BusName: "the bus",
+    {{ end }}
 	}, publisher
 }
 
