@@ -32,7 +32,7 @@ func TestHandleInvocation(t *testing.T) {
 // ========
 func buildHandler(t *testing.T) (handler.Handler, *tests.Recorder) {
 
-  log := zerolog.New(os.Stderr).With().Timestamp().Logger()
+  log := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
 	table, tearDown := tests.CreateDatabase(t)
 	t.Cleanup(tearDown)
 	publisher := &tests.Recorder{}
