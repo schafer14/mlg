@@ -42,7 +42,7 @@ exports.build = function(table, eventBus) {
 
   {{range $i, $trigger := .Triggers}}
   {{if eq $trigger.Type "event"}}
-  const eventRule{{ $i }} = new aws.cloudwatch.EventRule(`${stackName}_{{ $fn.Name }}_{{ $i }}`, {
+  const eventRule{{ $i }} = new aws.cloudwatch.EventRule(`${stackName}_{{ $trigger.Name }}_{{ $fn.Name }}_{{ $i }}`, {
     eventPattern: `{{ $trigger.Expression }}`,
     eventBusName: eventBus.name,
   })
